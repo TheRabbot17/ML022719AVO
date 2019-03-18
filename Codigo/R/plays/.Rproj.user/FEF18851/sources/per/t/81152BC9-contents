@@ -1,0 +1,29 @@
+install.packages("devtools", repos = "https://cloud.r-project.org/", upgrade = TRUE, dependencies = TRUE)
+install.packages("glue")
+install.packages("data.table")
+install.packages("openxlsx")
+
+library(devtools)
+library(data.table)
+library(openxlsx)
+devtools::install_github("abresler/nbastatR", upgrade = TRUE, force = TRUE, dependencies = TRUE)
+
+library(nbastatR)
+
+teams <- assign_nba_teams()
+teamstable = setDT(teams)
+print(teams)
+print(teamstable[isNonNBATeam == 0])
+
+schedule <- current_schedule()
+print(schedule)
+write.xlsx(schedule, 'schedule_table.xlsx')
+
+seasons_scheduleData <- seasons_schedule(seasons = c(2017))
+write.xlsx(seasons_scheduleData, 'seasons_schedule_table.xlsx')
+
+boxdata_scores <- box_scores(game_ids = c(11800001), box_score_types = c("Traditional"), result_types = c("team"), join_data = TRUE)
+write.xlsx(boxdata_scores, 'box_scores_table.xlsx')
+
+
+

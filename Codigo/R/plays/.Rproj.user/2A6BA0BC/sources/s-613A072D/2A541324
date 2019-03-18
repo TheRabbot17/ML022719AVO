@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1552845739341.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "988736030",
+    "id" : "2A541324",
+    "lastKnownWriteTime" : 1552846109,
+    "last_content_update" : 1552846109940,
+    "path" : "C:/Users/albert/Desktop/Universidad/TFG/Codigo/R/plays/main.R",
+    "project_path" : "main.R",
+    "properties" : {
+        "cursorPosition" : "3,62",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
