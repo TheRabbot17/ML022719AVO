@@ -5,7 +5,7 @@ utils.install_packages(package_name, lib_loc="D:\AlbertVillarOrtiz\Documents\R\w
 nba = importr('nbastatR')
 
 def getGameTable(year):
-    print(nba.game_logs(seasons = year))
+    print(nba.game_logs(seasons = year, season_types = ["Regular Season","Playoffs"]))
     #return(nba.game_logs(seasons = year))
 
 def getProbTable(gameID):

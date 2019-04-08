@@ -25,3 +25,46 @@ columnsGameToDelete = [1, 2, 12, 13, 14, 17, 18, 19, 21, 22, 23, 24, 25, 26, 34,
                  51, 52, 53, 54, 55, 56, 57]
 
 yearsDataFiles = ['2016', '2015', '2014', '2013', '2012', '2011', '2010', '2009']
+
+transWinsLoses = {"W": 1,"L": 0}
+
+transTrueFalse = {"VERDADERO": 1, "FALSO":0, "True": 1, "False": 0}
+
+transTypeSeason = {"Pre Season": 0, "Regular Season": 1, "Playoffs": 3, "All Star": 4}
+
+transNameTeam = {
+        "Boston Celtics": 0,
+        "Philadelphia 76ers": 1,
+        "New Jersey Nets": 2,
+        "Toronto Raptors": 3,
+        "New York Knicks": 4,
+        "Cleveland Cavaliers": 5,
+        "Chicago Bulls": 6,
+        "Detroit Pistons": 7,
+        "Indiana Pacers": 8,
+        "Milwaukee Bucks": 9,
+        "Orlando Magic": 10,
+        "Atlanta Hawks": 11,
+        "Miami Heat": 12,
+        "Charlotte Bobcats": 13,
+        "Washington Wizards": 14,
+        "Denver Nuggets": 15,
+        "Portland Trail Blazers": 16,
+        "Utah Jazz": 17,
+        "Minnesota Timberwolves": 18,
+        "Oklahoma City Thunder": 19,
+        "Los Angeles Lakers": 20,
+        "Phoenix Suns": 21,
+        "Golden State Warriors": 22,
+        "Los Angeles Clippers": 23,
+        "Sacramento Kings": 24,
+        "San Antonio Spurs": 25,
+        "Houston Rockets": 26,
+        "Dallas Mavericks": 27,
+        "New Orleans Hornets": 28,
+        "Memphis Grizzlies": 29,
+        "Charlotte Hornets": 13,
+        "Brooklyn Nets": 2,
+        "New Orleans Pelicans": 28,
+        "LA Clippers": 23
+        }
