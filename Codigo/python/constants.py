@@ -1,70 +1,71 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Mar 28 20:37:42 2019
+import numpy as np
 
-@author: AlbertVillarOrtiz
-"""
+####################################################################
+####################################################################
+#################### HEADERS #######################################
+GAMEHEADER = ['yearSeason', 'dateGame', 'idGame', 
+           'localIdTeam', 'isLocalB2B', 'isLocalB2BFirst', 'isLocalB2BSecond', 
+           'localCountDaysRest', 'localCountDaysNextGameTeam', 
+           'awayIdTeam', 'isAwayB2B', 'isAwayB2BFirst', 
+           'isAwayB2BSecond', 'awayCountDaysRest', 'awayCountDaysNextGameTeam']
 
-headersGame = ['yearSeason', 'typeSeason', 'dateGame', 'idGame', 
-           'numberGameLocalSeason', 'localNameTeam', 'localIdTeam', 'isLocalB2B',
-           'isLocalB2BFirst', 'isLocalB2BSecond', 'localCountDaysRest', 
-           'localCountDaysNextGameTeam', 'isLocalWinner', 'localFgm', 'localFga',
-           'localpctFG', 'localFg3m', 'localFg3a', 'localPctFG3', 'localFg2m', 
-           'localFg2a', 'localPctFG2', 'localFtm', 'localFta', 'localPctFT',
-           'localOReb', 'localDReb', 'localTreb', 'localAst', 
-           'localStl', 'localBlk', 'localTov', 'localPf', 'localPts', 
-           'localPlusMinus', 'numberGameAwaySeason','awayNameTeam', 'awayIdTeam', 
-           'isAwayB2B', 'isAwayB2BFirst', 'isAwayB2BSecond', 'awayCountDaysRest', 
-           'awayCountDaysNextGameTeam', 'isAwayWinner', 'awayFgm', 'awayFga',
-           'awaypctFG', 'awayFg3m', 'awayFg3a', 'awayPctFG3', 'awayFg2m', 
-           'awayFg2a', 'awayPctFG2', 'awayFtm', 'awayFta', 'awayPctFT',
-           'awayOReb', 'awayDReb', 'awayTreb', 'awayAst', 
-           'awayStl', 'awayBlk', 'awayTov', 'awayPf', 'awayPts', 'awayPlusMinus']
+TARGETHEADER = ['yearSeason', 'dateGame', 'idGame', 
+                'localPts', 'awayPts', 'winner']
 
-columnsGameToDelete = [1, 2, 12, 13, 14, 17, 18, 19, 21, 22, 23, 24, 25, 26, 34, 38,
-                 51, 52, 53, 54, 55, 56, 57]
+H2HTOTALHEADER = ['yearSeason', 'dateGame', 'idGame', 
+                  'idLocal', 'fgmLocal', 'fgaLocal', 'pctFGLocal', 'fg3mLocal',
+                  'fg3aLocal', 'pctFG3Local', 'fg2mLocal', 'fg2aLocal', 'pctFG2Local',
+                  'ftmLocal', 'ftaLocal', 'pctFTLocal', 'orebLocal', 'drebLocal',
+                  'trebLocal', 'astLocal', 'stlLocal', 'blkLocal', 'tovLocal',
+                  'pfLocal', 'ptsLocal', 'plsmnsLocal',
+                  'idAway', 'fgmAway', 'fgaAway', 'pctFGAway', 'fg3mAway',
+                  'fg3aAway', 'pctFG3Away', 'fg2mAway', 'fg2aAway', 'pctFG2Away',
+                  'ftmAway', 'ftaAway', 'pctFTAway', 'orebAway', 'drebAway',
+                  'trebAway', 'astAway', 'stlAway', 'blkAway', 'tovAway',
+                  'pfAway', 'ptsAway', 'plsmnsAway']
 
-yearsDataFiles = ['2016', '2015', '2014', '2013', '2012', '2011', '2010', '2009']
+H2HSUMMARYHEADER = ['yearSeason', 'dateGame', 'idGame', 
+                  'idLocal', 'fgmLocal', 'fgaLocal', 'pctFGLocal', 'fg3mLocal',
+                  'fg3aLocal', 'pctFG3Local', 'fg2mLocal', 'fg2aLocal', 'pctFG2Local',
+                  'ftmLocal', 'ftaLocal', 'pctFTLocal', 'orebLocal', 'drebLocal',
+                  'trebLocal', 'astLocal', 'stlLocal', 'blkLocal', 'tovLocal',
+                  'pfLocal', 'ptsLocal', 'plsmnsLocal',
+                  'idAway', 'fgmAway', 'fgaAway', 'pctFGAway', 'fg3mAway',
+                  'fg3aAway', 'pctFG3Away', 'fg2mAway', 'fg2aAway', 'pctFG2Away',
+                  'ftmAway', 'ftaAway', 'pctFTAway', 'orebAway', 'drebAway',
+                  'trebAway', 'astAway', 'stlAway', 'blkAway', 'tovAway',
+                  'pfAway', 'ptsAway', 'plsmnsAway', 'winsLocal', 'winsAway']
 
-transWinsLoses = {"W": 1,"L": 0}
+PLAYERSTOTALHEADER = ['yearSeason', 'dateGame', 'idGame',
+                      'idLocal', 'activePlayersL', 'idAway', 'activePlayersA']
 
-transTrueFalse = {"VERDADERO": 1, "FALSO":0, "True": 1, "False": 0}
+LINRHEADER = ['id', 'train', 'predict', 'MSE', 'MAD']
 
-transTypeSeason = {"Pre Season": 0, "Regular Season": 1, "Playoffs": 3, "All Star": 4}
+LOGRHEADER = ['id', 'train', 'predict', 'accuracy']
 
-transNameTeam = {
-        "Boston Celtics": 0,
-        "Philadelphia 76ers": 1,
-        "New Jersey Nets": 2,
-        "Toronto Raptors": 3,
-        "New York Knicks": 4,
-        "Cleveland Cavaliers": 5,
-        "Chicago Bulls": 6,
-        "Detroit Pistons": 7,
-        "Indiana Pacers": 8,
-        "Milwaukee Bucks": 9,
-        "Orlando Magic": 10,
-        "Atlanta Hawks": 11,
-        "Miami Heat": 12,
-        "Charlotte Bobcats": 13,
-        "Washington Wizards": 14,
-        "Denver Nuggets": 15,
-        "Portland Trail Blazers": 16,
-        "Utah Jazz": 17,
-        "Minnesota Timberwolves": 18,
-        "Oklahoma City Thunder": 19,
-        "Los Angeles Lakers": 20,
-        "Phoenix Suns": 21,
-        "Golden State Warriors": 22,
-        "Los Angeles Clippers": 23,
-        "Sacramento Kings": 24,
-        "San Antonio Spurs": 25,
-        "Houston Rockets": 26,
-        "Dallas Mavericks": 27,
-        "New Orleans Hornets": 28,
-        "Memphis Grizzlies": 29,
-        "Charlotte Hornets": 13,
-        "Brooklyn Nets": 2,
-        "New Orleans Pelicans": 28,
-        "LA Clippers": 23
-        }
+####################################################################
+####################################################################
+################## CONSTANTS VARIABLES #############################
+DELETEGAMECOLUMNS = [1, 2, 3, 6, 7, 12, 13, 14, 17, 18, 19, 20]
+DELETEGAMECOLUMNS.extend(np.linspace(21, 57, 37))
+
+DELETETEAMCOLUMNS = [1, 2, 11, 12, 14, 19, 20, 21, 64, 65, 157, 158, 159]
+DELETETEAMCOLUMNS.extend(np.linspace(108, 151, 43))
+
+TARGETCOLUMNS = [0, 4, 5, 8, 12, 49, 20]
+
+H2HTOTALCOLUMNS = [0,4,5,8,12,27,28,29,30,31,32,33,35,36,37,39,40,41,42,43,
+                   44,45,46,47,48,49,50]
+
+PLAYERSTOTALCOLUMNS = [0,4,5,8,12,25,38]
+
+           
+####################################################################
+####################################################################
+################## NORMALIZE VARIABLES #############################
+YEARS = ['2009', '2010', '2011', '2012', '2013', '2014', '2015', '2016']
+YEARSH2H = ['2005', '2006', '2007', '2008', '2009', '2010', '2011', 
+              '2012', '2013', '2014', '2015', '2016']
+WINSTOLOSES = {"W": 1,"L": 0}
+
+####################################################################
