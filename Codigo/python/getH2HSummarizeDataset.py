@@ -11,80 +11,104 @@ def getAllCombinationsTeams(options):
         
     return(allCombinations)
 
-def initDataNBA(year):
-    file = 'dataFinal/h2h/total/h2hTotal-' + year + '.xlsx'
-    xl = pd.ExcelFile(file)
-    dataNBA = np.array(xl.parse(xl.sheet_names[0]))
-    
-    return dataNBA
-
 def initDataH2H():
     file = 'dataFinal/h2h/total/h2hTotal.xlsx'
     xl = pd.ExcelFile(file)
     h2hTotal = np.array(xl.parse(xl.sheet_names[0]))
-    h2hTotal = np.hstack((h2hTotal, np.zeros((np.shape(h2hTotal)[0], 2))))
+    zerosArray = np.zeros((np.shape(h2hTotal)[0], 2), dtype = int)
+    h2hTotal = np.hstack((h2hTotal, zerosArray))
     
-    return(h2hTotal)
+    return(h2hTotal[1:])
 
 def getH2H(dataset):
-    H2HFinal = []
-    pts = np.hstack((dataset[0][24], dataset[0][47]))
-    H2HFinal.append(np.hstack((dataset[0], setWinner(pts))))
+    dictLocalAway = getLocalAwayByTeam(dataset)
+    H2HFinal = [dataset[0]]
+
     for row in range(1, np.shape(dataset)[0]):
         stats = []
-        aux = np.vstack((dataset[row], dataset[row-1]))
-        stats.extend(dataset[row][0:4])
-        stats.extend(np.mean(aux[:, 4:26], 0))
-        stats.extend([dataset[row][26]])
-        stats.extend(np.mean(aux[:, 27:49], 0))
-        stats.extend(setWinH2H(aux[1], H2HFinal[-1]))
-
+        stats.extend(dataset[row, 0:4])
+        stats.extend(setStatsByTeam(dataset[:row+2], dictLocalAway))
+        stats.extend(setWinH2H(dataset[row], dataset[row-1], H2HFinal[-1]))
         H2HFinal.append(stats)
-
+        
     return(H2HFinal)
 
-def setWinH2H(dataset, H2HFinal):
-    pts = np.hstack((dataset[24], dataset[47])) 
-    outcome = np.add(H2HFinal[-2:], setWinner(pts))
+def setStatsByTeam(dataset, dictLocalAway):
+    dictStatsByTeam = {}
+    keysValues = list(dictLocalAway.keys())
+
+    for key in keysValues:
+        aux = []
+        
+        for row in range(np.shape(dataset)[0]-1):
+            index = dictLocalAway[key][row]*23
+            aux.append(dataset[row, 4+index:26+index])
+
+        dictStatsByTeam[key] = np.mean(aux, axis=0)
     
-    return(outcome)
+    if(dictLocalAway[keysValues[0]][np.shape(dataset)[0]-1] == 0):
+        stats = np.hstack((dictStatsByTeam[keysValues[0]], dataset[-1:, 26], dictStatsByTeam[keysValues[1]]))
+    else:
+        stats = np.hstack((dictStatsByTeam[keysValues[1]], dataset[-1:, 26], dictStatsByTeam[keysValues[0]]))
+    
+    return(stats)
+   
+def getLocalAwayByTeam(dataset):
+    dictLocaAway = {}
+    for team in np.unique(dataset[:, 3]):
+        localAwayArray = []
+        
+        for row in range(0, np.shape(dataset)[0]):
+            if dataset[row, 3] == team:
+                localAwayArray.append(0)
+            else: 
+                localAwayArray.append(1)
+                
+        dictLocaAway[team] = localAwayArray
+    
+    return(dictLocaAway)
+    
+
+def setWinH2H(lastGame, lastLastGameInit, lastLastGameH2H):
+    pts = np.hstack((lastLastGameInit[24], lastLastGameInit[47]))
+    preOutcome = lastLastGameH2H[-2:]
+    result = setWinner(pts)
+            
+    outcome = np.add(preOutcome, result)
+    
+    if lastGame[3] != lastLastGameInit[3]:
+        return(np.flip(outcome))
+    else:
+        return(outcome)
     
 def setWinner(pts):
-    winner = []
-    if(pts[0] > pts[1]):
+    if(pts[0] > pts[1]): 
         winner = [1,0]
-    else:
+    else: 
         winner = [0,1]
         
     return(winner)
 
-def setH2H(H2H, H2HTotal):
-    for game in H2H:
-        H2HTotal[np.where((H2HTotal[:,2] == game[2]))] = game
+def setH2H(games, H2H):
+    for game in games:
+        H2H[np.where((H2H[:,2] == game[2]))] = game
     
-    return(H2HTotal)
+    return(H2H)
     
 
 def getDataset():
-    dataNBA = initDataNBA('2005')
-    H2HTotal = initDataH2H()
-    combinationsMatch = getAllCombinationsTeams(np.unique(dataNBA[1:,3]))
+    H2H = initDataH2H()
+    combinationsMatch = getAllCombinationsTeams(np.unique(H2H[1:,3]))
     
     for combi in combinationsMatch:
-        matchConcatenate = []
-        for year in c.YEARSH2H[1:]:
-            dataNBA = initDataNBA(year)
-            matchByYear = dataNBA[np.where((dataNBA[:,3] == combi[0]) * (dataNBA[:,26] == combi[1]))]
-            
-            for row in range(0, np.shape(matchByYear)[0]):
-                matchConcatenate.extend(matchByYear)
+        condition = (((H2H[:,3] == combi[0]) * (H2H[:,26] == combi[1])) | ((H2H[:,3] == combi[1])) * (H2H[:,26] == combi[0]))
+        matchs = H2H[np.where(condition)]
         
-        H2H = getH2H(matchConcatenate)
-        H2HTotal = setH2H(H2H, H2HTotal)
-        print(np.shape(combinationsMatch))
-        print(list(combinationsMatch).index(combi))
+        games = getH2H(matchs)
+        H2H = setH2H(games, H2H)
+        print("SHAPE & INDEX: ", np.shape(combinationsMatch), list(combinationsMatch).index(combi))
     
-    dataset = np.vstack(([c.H2HSUMMARYHEADER], H2HTotal))
+    dataset = np.vstack(([c.H2HSUMMARYHEADER], H2H))
     df = pd.DataFrame(dataset)
     df.to_excel('dataFinal/h2h/summary/h2hSummary.xlsx', index=False)
     print("Datos de los partidos actualizados correctamente.") 

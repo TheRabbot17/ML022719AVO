@@ -15,6 +15,14 @@ def initDataNBA(year):
     
     return dataNBA[:, c.PLAYERSTOTALCOLUMNS]
 
+def initRostersNBA(year):
+    file = 'dataInit/rosters/rosters-' + year + '.xlsx'
+    xl = pd.ExcelFile(file)
+    dataNBA = np.array(xl.parse(xl.sheet_names[0]))
+    
+    return dataNBA[:, c.ROSTERSTOTALCOLUMNS]
+    
+
 def createPlayerDatasets(datasetByYear, year, dataset):
     df = pd.DataFrame(datasetByYear)
     df.to_excel('dataFinal/players/players-' + year + '.xlsx', index=False)
@@ -22,37 +30,54 @@ def createPlayerDatasets(datasetByYear, year, dataset):
     
     return(np.vstack((dataset, datasetByYear[1:])))
 
-def setActivePlayers(activePlayers, gameDataset, dataByTeam):
+def setPlayers(activePlayers, inactivePlayers, gameDataset, dataByTeam):
     if dataByTeam[0,4] == 'H' and np.shape(gameDataset)[0] > 3:
         gameDataset = np.insert(gameDataset, 3, dataByTeam[0, 3])
-        gameDataset = np.insert(gameDataset, 4, np.array(activePlayers))
+        gameDataset = np.insert(gameDataset, 4, activePlayers)
+        gameDataset = np.insert(gameDataset, 16, inactivePlayers)
     else:
         gameDataset = np.hstack((gameDataset, dataByTeam[0, 3]))
-        gameDataset = np.hstack((gameDataset, np.array(activePlayers)))
+        gameDataset = np.hstack((gameDataset, activePlayers))
+        gameDataset = np.hstack((gameDataset, inactivePlayers))
     
     return gameDataset
 
-def getPlayerDataset(dataByGame):
-    gameDataset = np.array(dataByGame[0, 0:3])
+def setActiveInactive(activePlayers, inactivePlayers):
+    if np.shape(activePlayers)[0] < 12:
+        activePlayers = np.hstack((activePlayers, np.zeros((12 - np.shape(activePlayers)[0]))))
+    if np.shape(inactivePlayers)[0] < 12:
+        inactivePlayers = np.hstack((inactivePlayers, np.zeros((12 - np.shape(inactivePlayers)[0]))))
+
+    return(activePlayers[:12], inactivePlayers[:12])
+
+def getPlayerDataset(dataByGame, rostersNBA):
+    gameDataset = dataByGame[0, 0:3]
     for idTeam in np.unique(dataByGame[:, 3]):
         dataByTeam = dataByGame[np.where(dataByGame[:, 3] == idTeam)]
+        inactivePlayers = rostersNBA[np.where(rostersNBA[:, 1] == idTeam)][:, 0]
         activePlayers = dataByTeam[np.where(dataByTeam[:, 6] != 0)][:, 5]
-        gameDataset = setActivePlayers(activePlayers, gameDataset, dataByTeam)
-        print(gameDataset)
+        
+        inactivePlayers = list(set(inactivePlayers) - set(activePlayers))
+        activePlayers.sort()  
+        inactivePlayers.sort()
+        
+        activePlayers, inactivePlayers = setActiveInactive(activePlayers, inactivePlayers)
+        gameDataset = setPlayers(activePlayers, inactivePlayers, gameDataset, dataByTeam)
         
     return gameDataset
     
 def getDataset():
     dataset = np.array([c.PLAYERSTOTALHEADER])
-    for year in c.YEARSH2H:
+    for year in c.YEARS:
         datasetByYear = np.array([c.PLAYERSTOTALHEADER])
         dataNBA = initDataNBA(year)
+        rostersNBA = initRostersNBA(year)
         
         for idGame in np.unique(dataNBA[:, 2]):  
             dataByGame = dataNBA[np.where(dataNBA[:, 2] == idGame)]
-            gameDataset = getPlayerDataset(dataByGame)
+            gameDataset = getPlayerDataset(dataByGame, rostersNBA)
             
-            datasetByYear = np.vstack((dataset, gameDataset))
+            datasetByYear = np.vstack((datasetByYear, gameDataset))
         
         dataset = createPlayerDatasets(datasetByYear, year, dataset)
     
