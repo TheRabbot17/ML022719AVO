@@ -1,103 +1,111 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun May  5 15:06:06 2019
-
-@author: AlbertVillarOrtiz
-"""
-
-from selenium import webdriver 
-from selenium.webdriver.common.by import By 
-from selenium.webdriver.support.ui import WebDriverWait 
-from selenium.webdriver.support import expected_conditions as EC 
-from selenium.common.exceptions import TimeoutException
-import numpy as np
-import time
-from datetime import datetime  
-from datetime import timedelta
-import constants as c
-from bs4 import BeautifulSoup
 import pandas as pd
+import numpy as np
+import constants as c
 
-def setYears(years):
-    yearsUrl = []
-    for i in range(3, len(years)-1):
-        yearsUrl.append(years[i]+'-'+years[i+1])
+def initOddsDataset():
+    file = 'dataInit/odds/odds.xlsx'
+    xl = pd.ExcelFile(file)
+    dataNBA = np.array(xl.parse(xl.sheet_names[0]))
     
-    return(yearsUrl)
-    
-def setPages(driver):
-    pagination = driver.find_element_by_xpath('//*[@id="pagination"]')
-    listPages = pagination.find_elements_by_tag_name('a')
+    return dataNBA
 
-    return(int(listPages[-1].get_attribute("x-page"))+1)
-
-def getData(driver, year):
-    html = driver.page_source
-    html = BeautifulSoup(html, "html.parser")
-    html.prettify
+def initGameDataset():
+    games = 'dataFinal/games/games.xlsx'
+    xl = pd.ExcelFile(games)
+    games = np.array(xl.parse(xl.sheet_names[0]))
     
-    return(setDataset(html, year))
-
-def setDataset(html, year):
-    dataset = []
-    hour = html.find_all(attrs={'class': 'table-time'})
-    match = html.find_all(attrs={'class': 'table-participant'})
-    pts = html.find_all(attrs={'class': 'table-score'})
-    odds = html.find_all(attrs={'class': 'odds-nowrp'})
+    target = 'dataFinal/target/target.xlsx'
+    xl = pd.ExcelFile(target)
+    target = np.array(xl.parse(xl.sheet_names[0]))
     
-    for i in range(len(hour)):
-        h, m, p, o1, o2 = formData(hour, match, pts, odds, i)
+    dataNBA = np.hstack((games, target[:, 3:]))
+    dataNBA[1:, 15] = list(map(str, dataNBA[1:, 15]))
+    dataNBA[1:, 16] = list(map(str, dataNBA[1:, 16]))
+    
+    return dataNBA[1:]
+
+def getGameDataset(dataByGame):
+    gameDataset = np.array(dataByGame[0, 0:3])
+    for idTeam in np.unique(dataByGame[:, 3]):
+        dataByTeam = dataByGame[np.where(dataByGame[:, 3] == idTeam)]
+        gameDataset = np.hstack((gameDataset, dataByTeam[0, 3:9]))
+    
+    return gameDataset
+
+def getDataForMatch(gameDatasetT, oddsDataset, i):
+#    print("ODDSDATASET[87]: ", oddsDataset[i])
+    condTeams = (((gameDatasetT[:, 3] == oddsDataset[i, 2]) & (gameDatasetT[:, 9] == oddsDataset[i, 3]) & (gameDatasetT[:, 0] == oddsDataset[i, 0])))
+    gamesArray = np.where(condTeams)
+    ableTeams, indexTeams = isLocalMatchAble(gamesArray, i, 1)
+
+    if ableTeams == 1:
+        condPoints = ((gameDatasetT[indexTeams, 15] ==  oddsDataset[i, 4]) & (gameDatasetT[indexTeams, 16] ==  oddsDataset[i, 5]))
+        finalSolution = np.where(condPoints)
+        ablePoints, indexPoints = isLocalMatchAble(finalSolution, i, 2)
         
-        if m[0] in c.TEAMS.values() and m[1] in c.TEAMS.values() and (o1 != '-' or o2 != '-'):
-            if len(p) == 2:
-                p[1] = p[1].replace('OT','')
-                dataset.append([year,h,m[0],m[1],p[0],p[1],o1,o2])
+        if ablePoints == 1:         
+            return ableTeams, ablePoints, indexTeams[indexPoints[0]]
+#    print("---------------------------------")
+    return -1, -1, []
+
+def isLocalMatchAble(tupleValue, i, step):
+    able = -1
+    index = -1
+#    print("INDEX AND STEP: ", i, step)
+#    print("TUPLE: ", tupleValue)
+#    if i > 84 and i < 101:
+    if tupleValue[0].size == 1:
+#        print("UNIQUE OPTIONS: ", i, tupleValue[0], tupleValue[0].size)
+        able = 1
+        index = tupleValue[0]
+    elif tupleValue[0].size > 1:
+#        print("MULTIPLE OPTIONS: ", i, tupleValue[0], tupleValue[0].size)
+        if step == 1:
+            able = 1
+            index = tupleValue[0]
+
+    return able, index
+    
+
+def getDataset():
+    oddsDataset = initOddsDataset()
+    gameDatasetT = initGameDataset()
+    datasetGlobal = [c.ODDSFINALHEADER]
+    testingErrors = []
+    testingOKGame = []
+    testingOKOdd = []
+    
+    for i in range(np.shape(oddsDataset)[0]):
+#    for i in range(101, 102):
+        ableTeams, ablePoints, indexGameT = getDataForMatch(gameDatasetT, oddsDataset, i)
+        
+        if ableTeams+ablePoints == 2:
+            gameSelected = gameDatasetT[indexGameT]
+            testingOKGame.append(indexGameT)
+            testingOKOdd.append(i)
+            
+            if(gameSelected[3] == oddsDataset[i, 2]):
+                newGameValues = np.hstack((gameSelected[:4],  oddsDataset[i, 6], oddsDataset[i, 3],  oddsDataset[i, 7]))
             else:
-                dataset.append([year,h,m[0],m[1],p,p,o1,o2])
+                newGameValues = np.hstack((gameSelected[:4],  oddsDataset[i, 7], oddsDataset[i, 3],  oddsDataset[i, 6]))
+            
+            datasetGlobal = np.vstack((datasetGlobal, newGameValues))
+        else:
+            testingErrors.append(i)
     
-    return(dataset)
-
-def saveDataset(dataset, year):
-    df = pd.DataFrame(dataset)
-    df.to_excel('dataInit/odds/odds-'+year+'.xlsx', index=False)
-    print('Datos de los partidos del '+year+' actualizados correctamente.') 
-
-def formData(hour, match, pts, odds, i):
-    index = 2*i
-    h = hour[i].get_text()
-    m = match[i].get_text().split('-')
-    p = pts[i].get_text().split(':')
-    o1 = odds[index].get_text()
-    o2 = odds[index+1].get_text()
-    m[0] = m[0].replace(' ','').replace(u'\xa0', u'')
-    m[1] = m[1].replace(' ','').replace(u'\xa0', u'')
-    if m[0] in c.TEAMS: m[0] = c.TEAMS[m[0]]
-    if m[1] in c.TEAMS: m[1] = c.TEAMS[m[1]]
+    testingOKGame.sort()
+    testingOKOdd.sort()
+    df = pd.DataFrame(datasetGlobal)
+    df.to_excel('dataFinal/odds/odds.xlsx', index=False)
+    print("Datos de las cuotas/probabilidades actualizadas correctamente.") 
+    listTotal = np.array(range(0, np.shape(gameDatasetT)[0]))
+    result = list(set(listTotal) - set(testingOKGame))
+    result.sort()
+    print("TESTINGOKGAME: ", testingOKGame)
+    print("TESTINGOKODD: ", testingOKOdd)
+    print("RESULT: ", len(result), "TESTINGOK: ", len(testingOKGame), "TESTINGOKUNIQUE: ", len(list(set(testingOKGame))))
     
-    return(h, m, p, o1, o2)
-    
-option = webdriver.ChromeOptions()
-#option.add_argument(“ — incognito”)
-driver = webdriver.Chrome(executable_path= c.DRIVERPATH)
+getDataset()
 
-yearsFormat = setYears(c.YEARSH2H)
-datasetGlobal = []
-
-for i in range(len(yearsFormat)):
-    dataset = []
-    driver.get(c.URLBASE.format(yearsFormat[i], 1))
-    pages = setPages(driver)   
-    
-    for page in range(2, pages):
-        driver.get(c.URLBASE.format(yearsFormat[i], page))
-        driver.implicitly_wait(5)
-        dataset.extend(getData(driver, c.YEARSH2H[i+3]))
-    
-    datasetGlobal.extend(dataset)
-    saveDataset(dataset, c.YEARSH2H[i+3])
-
-df = pd.DataFrame(datasetGlobal)
-df.to_excel('dataInit/odds/odds.xlsx', index=False)
-print('Datos de los partidos actualizados correctamente.')
-
+        
     

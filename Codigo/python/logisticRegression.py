@@ -15,12 +15,12 @@ def splitData(trainCoef, testCoef, valCoef, dataset):
     
     return(trainRows, testRows)
 
-def getDatasets(typeData):
+def getDatasets(typeData, typeOutput):
     switchDataset = {
-            0: ['games', c.GAMECOLSTOPREDICTFS],
-            1: ['h2h'],
-            2: ['players', c.PLAYERSCOLSTOPREDICTFS],
-            3: ['totalData']
+            0: ['games', c.GAMEPREDICTUS, c.GAMEPREDICTFS,c.GAMEPREDICT],
+            1: ['h2h', c.H2HPREDICTUS, c.H2HPREDICTFS,c.H2HPREDICT],
+            2: ['players', c.PLAYERSPREDICTUS, c.PLAYERSPREDICTFS,c.PLAYERSPREDICT],
+            3: ['total', c.TOTALPREDICTUS, c.TOTALPREDICTFS,c.TOTALPREDICT]
     }
     
     nameDataset = switchDataset.get(typeData, 'Invalid value')
@@ -29,13 +29,16 @@ def getDatasets(typeData):
     
     target = np.array(pd.read_excel("dataFinal/target/target.xlsx"))
     
-    return(dataset, target, nameDataset[1])
+    if typeData == 1:
+        dataset = dataset[4921:]
+    
+    return(dataset, target, nameDataset[1+typeOutput])
 
 def plotResults(dataset_X_test, dataset_Y_test, dataset_Y_pred):
     print("Accuracy: ", accuracy_score(dataset_Y_test, dataset_Y_pred))
 
-def predictWin(typeData):
-    dataset, target, features = getDatasets(typeData)
+def predictWin(typeData, typeOutput):
+    dataset, target, features = getDatasets(typeData, typeOutput)
     trainRows, testRows = splitData(0.7,0.2,0.1, dataset[1:])
     
     dataset_X_train = dataset[1:trainRows, features]
@@ -51,4 +54,4 @@ def predictWin(typeData):
     plotResults(dataset_X_test, dataset_Y_test, dataset_Y_pred)
     
 ###############################################################################
-predictWin(2)
+predictWin(3,2)

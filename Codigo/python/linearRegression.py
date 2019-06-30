@@ -16,31 +16,44 @@ def splitData(trainCoef, testCoef, valCoef, dataset):
 def plotResults(dataset_X_test, dataset_Y_test, dataset_Y_pred, location):
     print("MEAN ABSOLUTE ERROR ("+location+"): ", mean_absolute_error(dataset_Y_test, dataset_Y_pred))
     
-def getDatasets(typeData):
-    switchDataset = {
-            0: ['games', c.GAMECOLSTOPREDICTFS],
-            1: ['h2h'],
-            2: ['players', c.PLAYERSCOLSTOPREDICTFS],
-            3: ['totalData']
+def getDatasets(typeData, typeOutput, locality):
+    switchDatasetLocal = {
+            0: ['games', c.GAMEPREDICTUSL, c.GAMEPREDICTFSL,c.GAMEPREDICT],
+            1: ['h2h', c.H2HPREDICTUSL, c.H2HPREDICTFSL,c.H2HPREDICT],
+            2: ['players', c.PLAYERSPREDICTUS, c.PLAYERSPREDICTFS,c.PLAYERSPREDICT],
+            3: ['total', c.TOTALPREDICT, c.TOTALPREDICT,c.TOTALPREDICT]
     }
     
-    nameDataset = switchDataset.get(typeData, 'Invalid value')
+    switchDatasetAway = {
+            0: ['games', c.GAMEPREDICTUSA, c.GAMEPREDICTFSA,c.GAMEPREDICT],
+            1: ['h2h', c.H2HPREDICTUSA, c.H2HPREDICTFSA,c.H2HPREDICT],
+            2: ['players', c.PLAYERSPREDICTUS, c.PLAYERSPREDICTFS,c.PLAYERSPREDICT],
+            3: ['total', c.TOTALPREDICT, c.TOTALPREDICT,c.TOTALPREDICT]
+    }
+    
+    if locality == 0:
+        nameDataset = switchDatasetLocal.get(typeData, 'Invalid value')
+    else:
+        nameDataset = switchDatasetAway.get(typeData, 'Invalid value')
     dataset = pd.read_excel("dataFinal/"+nameDataset[0]+"/"+nameDataset[0]+".xlsx")
     dataset = np.array(dataset.fillna(0))
     
     target = np.array(pd.read_excel("dataFinal/target/target.xlsx"))
     
+    if typeData == 1:
+        dataset = dataset[4921:]
+    
     return(dataset, target, nameDataset[1])
 
-def predictLocalPoints(typeData):
-    dataset, target, features = getDatasets(typeData)
+def predictLocalPoints(typeData, typeOutput, locality):
+    dataset, target, features = getDatasets(typeData, typeOutput, locality)
     trainRows, testRows = splitData(0.7,0.2,0.1, dataset[1:])
 
     dataset_X_train = dataset[1:trainRows, features]
     dataset_X_test = dataset[trainRows+1:testRows, features]
 
-    dataset_Y_train = dataset[1:trainRows, 3]
-    dataset_Y_test = dataset[trainRows+1:testRows, 3]
+    dataset_Y_train = target[1:trainRows, 3]
+    dataset_Y_test = target[trainRows+1:testRows, 3]
     
     regr = linear_model.LinearRegression()
     regr.fit(dataset_X_train, dataset_Y_train)
@@ -48,8 +61,8 @@ def predictLocalPoints(typeData):
     
     plotResults(dataset_X_test, dataset_Y_test, dataset_Y_pred, 'LOCAL')
 
-def predictAwayPoints(typeData):
-    dataset, target, features = getDatasets(typeData)
+def predictAwayPoints(typeData, typeOutput, locality):
+    dataset, target, features = getDatasets(typeData, typeOutput, locality)
     trainRows, testRows = splitData(0.7,0.2,0.1, dataset[1:])
 
     dataset_X_train = dataset[1:trainRows, features]
@@ -66,8 +79,8 @@ def predictAwayPoints(typeData):
     
 
 ###############################################################################
-predictLocalPoints(2)
-predictAwayPoints(2)
+predictLocalPoints(3,0,0)
+predictAwayPoints(3,0,1)
     
 
 

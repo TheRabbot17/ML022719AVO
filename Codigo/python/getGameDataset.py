@@ -14,8 +14,14 @@ def getGameDataset(dataByGame):
     gameDataset = np.array(dataByGame[0, 0:3])
     for idTeam in np.unique(dataByGame[:, 3]):
         dataByTeam = dataByGame[np.where(dataByGame[:, 3] == idTeam)]
-        gameDataset = np.hstack((gameDataset, dataByTeam[0, 3:9]))
-    
+        location = dataByTeam[0, 7]
+        dataByTeam = np.delete(dataByTeam, 7, 1)
+
+        if location == 'H' and np.shape(gameDataset)[0] > 3:
+            gameDataset = np.insert(gameDataset, 3, dataByTeam[0, 3:9])
+        else:
+            gameDataset = np.hstack((gameDataset, dataByTeam[0, 3:9]))
+            
     return gameDataset
 
 def createGamesDatasets(dataset, year, dataJoined):

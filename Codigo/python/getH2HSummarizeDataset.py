@@ -27,7 +27,7 @@ def getH2H(dataset):
     for row in range(1, np.shape(dataset)[0]):
         stats = []
         stats.extend(dataset[row, 0:4])
-        stats.extend(setStatsByTeam(dataset[:row+2], dictLocalAway))
+        stats.extend(setStatsByTeam(dataset[:row+1], dictLocalAway))
         stats.extend(setWinH2H(dataset[row], dataset[row-1], H2HFinal[-1]))
         H2HFinal.append(stats)
         
@@ -43,7 +43,7 @@ def setStatsByTeam(dataset, dictLocalAway):
         for row in range(np.shape(dataset)[0]-1):
             index = dictLocalAway[key][row]*23
             aux.append(dataset[row, 4+index:26+index])
-
+        
         dictStatsByTeam[key] = np.mean(aux, axis=0)
     
     if(dictLocalAway[keysValues[0]][np.shape(dataset)[0]-1] == 0):
@@ -110,7 +110,7 @@ def getDataset():
     
     dataset = np.vstack(([c.H2HSUMMARYHEADER], H2H))
     df = pd.DataFrame(dataset)
-    df.to_excel('dataFinal/h2h/summary/h2hSummary.xlsx', index=False)
+    df.to_excel('dataFinal/h2h/h2h.xlsx', index=False)
     print("Datos de los partidos actualizados correctamente.") 
     
 getDataset()

@@ -14,9 +14,9 @@ def plotResults(model, dataset_X_train, dataset):
 def getDatasets(typeData, typeTarget):
     switchDataset = {
             0: ['games', [1,2]],
-            1: ['h2h', [1,2]],
+            1: ['h2h', [1,2,25,48]],
             2: ['players', [1,2]],
-            3: ['totalData', [1,2]]
+            3: ['total', [1,2,30,82]]
     }
     
     switchTarget = {
@@ -33,6 +33,9 @@ def getDatasets(typeData, typeTarget):
     target = np.array(pd.read_excel("dataFinal/target/target.xlsx"))
     dataset = np.delete(dataset, nameDataset[1], 1)
     
+    if typeData == 1:
+        dataset = np.vstack((dataset[0], dataset[4921:]))
+    
     return(dataset, target[:, colsTarget])
 
 def featureImportance(typeData, typeTarget):
@@ -47,7 +50,9 @@ def featureImportance(typeData, typeTarget):
     plotResults(model, dataset_X_train, dataset)
     
 ###############################################################################
-featureImportance(2, 0)
+featureImportance(3,2)
+
+# 0 = Winner; 1 = LocalPts; 2 = AwayPts
 
 
 

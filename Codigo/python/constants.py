@@ -4,9 +4,9 @@ import numpy as np
 ####################################################################
 #################### HEADERS #######################################
 GAMEHEADER = ['yearSeason', 'dateGame', 'idGame', 
-           'localIdTeam', 'isLocalB2B', 'isLocalB2BFirst', 'isLocalB2BSecond', 
+           'idLocal', 'isLocalB2B', 'isLocalB2BFirst', 'isLocalB2BSecond', 
            'localCountDaysRest', 'localCountDaysNextGameTeam', 
-           'awayIdTeam', 'isAwayB2B', 'isAwayB2BFirst', 
+           'idAway', 'isAwayB2B', 'isAwayB2BFirst', 
            'isAwayB2BSecond', 'awayCountDaysRest', 'awayCountDaysNextGameTeam']
 
 TARGETHEADER = ['yearSeason', 'dateGame', 'idGame', 
@@ -58,6 +58,8 @@ PLAYERSTOTALHEADER = ['yearSeason', 'dateGame', 'idGame',
 
 ODDSINITHEADER = ['year', 'hour', 'idLocal', 'idAway', 'ptsLocal' 'ptsAway',
                   'oddWinLocal', 'oddWinAway']
+ODDSFINALHEADER = ['year', 'hour', 'idGame', 'idLocal' ,'oddWinLocal', 
+                   'idAway', 'oddWinAway']
 
 LINRHEADER = ['id', 'train', 'predict', 'MSE', 'MAD']
 
@@ -66,7 +68,7 @@ LOGRHEADER = ['id', 'train', 'predict', 'accuracy']
 ####################################################################
 ####################################################################
 ################## CONSTANTS VARIABLES #############################
-DELETEGAMECOLUMNS = [1, 2, 3, 6, 7, 12, 13, 14, 17, 18, 19, 20]
+DELETEGAMECOLUMNS = [1, 2, 3, 6, 7, 13, 14, 17, 18, 19, 20]
 DELETEGAMECOLUMNS.extend(np.linspace(21, 57, 37))
 
 DELETETEAMCOLUMNS = [1, 2, 11, 12, 14, 19, 20, 21, 64, 65, 157, 158, 159]
@@ -84,10 +86,45 @@ ROSTERSTOTALCOLUMNS = [3,5]
 URLBASE = 'https://www.oddsportal.com/basketball/usa/nba-{}/results/#/page/{}/'
 DRIVERPATH = 'C:\Program Files (x86)\Google\Chrome\Application\chromedriver.exe'
 
-GAMECOLSTOPREDICTFS = [0, 7, 8, 13, 14]
-GAMECOLSTOPREDICTUS = [7, 8, 12, 13, 14]
+GAMEPREDICTFS = [0,7,8,13,14]
+GAMEPREDICTUS = [7,8,13,14]
+GAMEPREDICT = [0,3,4,5,6,7,8,9,10,11,12,13,14]
 
-PLAYERSCOLSTOPREDICTFS = range(3, 53)
+H2HPREDICTFS = [0,6,9,12,15,17,18,29,41,50]
+H2HPREDICTUS = [49,50]
+H2HPREDICT = [0,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,
+              26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,
+              47,48,49,50]
+
+PLAYERSPREDICTFS = [0,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,
+              26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,
+              47,48,49,50,51,52]
+PLAYERSPREDICTUS = [0,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,
+              26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,
+              47,48,49,50,51,52]
+PLAYERSPREDICT = [0,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,
+              26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,
+              47,48,49,50,51,52]
+
+TOTALPREDICTFS = [33,34,35,36]
+TOTALPREDICTUS = [32,33,34,107,108,104]
+TOTALPREDICT = [0,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,
+              26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,
+              47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,
+              70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,
+              93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108]
+# -----------------------------------------------------------------------------
+GAMEPREDICTFSL = [0,7,8,13,14]
+GAMEPREDICTUSL = [7,8,13,14]
+
+H2HPREDICTFSL = [15,18,23,41]
+H2HPREDICTUSL = [8,24,49,50]
+# -----------------------------------------------------------------------------
+GAMEPREDICTFSA = [0,7,8,13,14]
+GAMEPREDICTUSA = [7,8,13,14]
+
+H2HPREDICTFSA = [11,23,39,40]
+H2HPREDICTUSA = [31,47,49,50]           
            
 ####################################################################
 ####################################################################
@@ -132,3 +169,14 @@ TEAMS = {
         "DetroitPistons": '1610612765',
         "CharlotteHornets": '1610612766',
         }
+
+EXTRA = {
+        2009: [63,85],
+        2010: [112,82],
+        2011: [108,81],
+        2012: [30,84],
+        2013: [101,85],
+        2014: [109,89],
+        2015: [107,81],
+        2016: [100,84]
+}
